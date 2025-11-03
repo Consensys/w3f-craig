@@ -17,6 +17,9 @@ spec:
       targetRevision: 16.3.5
       helm:
         values:  |
+          global:
+            security:
+              allowInsecureImages: true
           image:
             repository: bitnamilegacy/postgresql
           primary:
@@ -33,6 +36,9 @@ spec:
       targetRevision: 20.6.1
       helm:
         values:  |
+          global:
+            security:
+              allowInsecureImages: true
           image:
             repository: bitnamilegacy/redis
           architecture: standalone

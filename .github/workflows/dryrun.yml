@@ -14,17 +14,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2.7.0
 
       - name: Install Node v18
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@f1f314fca9dfce2769ece7d933488f076716723e # v1.4.6
         with:
           node-version: 18.x
 
       - name: Install dependencies
         run: yarn
       - name: Write .env
-        uses: DamianReeves/write-file-action@v1.0
+        uses: DamianReeves/write-file-action@e19fd875ed54f16fc583a3486e62547ce4a5dde8 # v1.0
         with:
           path: .env
           contents: |
@@ -35,7 +35,7 @@ jobs:
           write-mode: overwrite
 
       - name: Write apps/dashboard/.env
-        uses: DamianReeves/write-file-action@v1.0
+        uses: DamianReeves/write-file-action@e19fd875ed54f16fc583a3486e62547ce4a5dde8 # v1.0
         with:
           path: apps/dashboard/.env
           contents: |

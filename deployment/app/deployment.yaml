@@ -10,9 +10,28 @@ spec:
     metadata:
       labels:
         app: craig
-      annotations:
-        instrumentation.opentelemetry.io/inject-nodejs: "otel-operator/instrumentation-grpc"
     spec:
+      # OpenTelemetry Node.js auto-instrumentation, wired manually (the
+      # web3factory otel-operator addon is decommissioned). Traces are sent
+      # to the cluster Alloy OTLP receiver, which adds k8s metadata.
+      initContainers:
+      - name: opentelemetry-auto-instrumentation-nodejs
+        image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-nodejs:0.64.1
+        command: ["cp", "-r", "/autoinstrumentation/.", "/otel-auto-instrumentation-nodejs"]
+        resources:
+          limits:
+            cpu: 500m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 128Mi
+        volumeMounts:
+          - name: otel-auto-instrumentation-nodejs
+            mountPath: /otel-auto-instrumentation-nodejs
+      volumes:
+        - name: otel-auto-instrumentation-nodejs
+          emptyDir:
+            sizeLimit: 200Mi
       containers:
       - name: craig
         image: 992382534381.dkr.ecr.us-east-1.amazonaws.com/cs-prod-craig-bot:e4f5133
@@ -43,6 +62,25 @@ spec:
             value: "https://ez.craig.horse/"
           - name: NODE_ENV
             value: 'production'
+          - name: NODE_OPTIONS
+            value: "--require /otel-auto-instrumentation-nodejs/autoinstrumentation.js"
+          - name: OTEL_SERVICE_NAME
+            value: craig
+          - name: OTEL_EXPORTER_OTLP_ENDPOINT
+            value: "http://k8s-monitoring-alloy-receiver.kube-prometheus:4317"
+          - name: OTEL_EXPORTER_OTLP_PROTOCOL
+            value: grpc
+          - name: OTEL_PROPAGATORS
+            value: tracecontext,baggage
+          - name: OTEL_TRACES_SAMPLER
+            value: parentbased_traceidratio
+          - name: OTEL_TRACES_SAMPLER_ARG
+            value: "1"
+          - name: OTEL_RESOURCE_ATTRIBUTES
+            value: "service.namespace=craig-bot"
+        volumeMounts:
+          - name: otel-auto-instrumentation-nodejs
+            mountPath: /otel-auto-instrumentation-nodejs
         ports:
           - name: app
             containerPort: 3000
